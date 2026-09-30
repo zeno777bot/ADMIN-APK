@@ -10,6 +10,8 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Toast;
+import android.view.MotionEvent;
 
 public class MainActivity extends Activity {
 
@@ -17,6 +19,9 @@ public class MainActivity extends Activity {
             "https://zeno777.up.railway.app/admin";
 
     private WebView webView;
+
+    private float startY;
+    private boolean refreshing = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +70,45 @@ public class MainActivity extends Activity {
         settings.setDisplayZoomControls(false);
 
         webView.loadUrl(ADMIN_URL);
+
+        webView.setOnTouchListener((v, event) -> {
+
+            switch (event.getAction()) {
+
+                case MotionEvent.ACTION_DOWN:
+                    startY = event.getY();
+                    break;
+
+                case MotionEvent.ACTION_UP:
+
+                    float endY = event.getY();
+                    float distance = endY - startY;
+
+                    if (distance > 180 &&
+                            webView.getScrollY() == 0 &&
+                            !refreshing) {
+
+                        refreshing = true;
+
+                        Toast.makeText(
+                                MainActivity.this,
+                                "Refreshing...",
+                                Toast.LENGTH_SHORT
+                        ).show();
+
+                        webView.reload();
+
+                        new Handler().postDelayed(
+                                () -> refreshing = false,
+                                1500
+                        );
+                    }
+
+                    break;
+            }
+
+            return false;
+        });
 
         setContentView(webView);
     }
